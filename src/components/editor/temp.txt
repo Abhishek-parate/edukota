@@ -1,0 +1,173 @@
+import React, { useState, useEffect } from "react";
+import "react-quill/dist/quill.snow.css";
+import OptionEditor from "../components/editor/OptionEditor";
+import MyQuillEditor from "../components/editor/MyQuillEditor";
+import { getGroups, addQuestion } from "../api";
+
+const AddQuestion = () => {
+  const [questionGroups, setQuestionGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [title, setTitle] = useState("");
+  const [optionsCount, setOptionsCount] = useState("");
+  const [options, setOptions] = useState([]);
+  const [correctOption, setCorrectOption] = useState(null);
+  const [marks, setMarks] = useState("");
+  const [toption, setToption] = useState(""); // Total options count
+  
+
+  useEffect(() => {
+    fetchQuestionGroups();
+  }, []);
+
+  useEffect(() => {
+    if (optionsCount !== "") {
+      setOptions(Array(parseInt(optionsCount)).fill(""));
+    } else {
+      setOptions([]);
+    }
+  }, [optionsCount]);
+
+  useEffect(() => {
+    if (toption !== "") {
+      setOptions(Array(parseInt(toption)).fill("")); // Adjust options count based on toption
+    }
+  }, [toption]);
+
+  const fetchQuestionGroups = async () => {
+    const data = await getGroups();
+    setQuestionGroups(data);
+  };
+
+  const handleOptionChange = (index, value) => {
+    const newOptions = [...options];
+    newOptions[index] = value;
+    setOptions(newOptions);
+  };
+
+  const handleOptionEditorChange = (index, value) => {
+    handleOptionChange(index, value);
+  };
+
+  const handleCreate = async () => {
+    // Validate options
+    const hasEmptyOptions = options.some(option => option.trim() === "");
+    if (hasEmptyOptions) {
+      alert("All options must be filled in.");
+      return;
+    }
+
+    if (correctOption === null) {
+      alert("Correct option must be selected.");
+      return;
+    }
+
+    const payload = {
+      question: title, // Ensure title contains HTML content
+      group: selectedGroup,
+      marks: marks,
+      toption: toption, // Total number of options
+      options: options.map((option, index) => ({ name: option, isCorrect: correctOption === index })), // Format options with isCorrect field
+    };
+
+    console.log("Payload to send:", payload); // Debug: Print the payload
+
+    try {
+      const response = await addQuestion(payload); // Call the API to save the question
+      console.log("Response from API:", response);
+    } catch (error) {
+      console.error("Error adding question:", error);
+    }
+  };
+
+  return (
+    <div className="container w-full">
+      <div className="card bg-base-100">
+        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+          Question Management
+        </h1>
+
+        <div className="flex flex-col gap-4 mb-4">
+          <MyQuillEditor
+            theme="snow"
+            value={title}
+            onChange={setTitle}
+            className={`quill-editor`}
+            placeholder="Enter Question Title"
+          />
+
+      
+
+          <div className="flex flex-wrap w-full">
+            <select
+              value={selectedGroup}
+              onChange={(e) => setSelectedGroup(e.target.value)}
+              className="select select-bordered w-full sm:w-1/3 m-1"
+            >
+              <option value="">Select Question Group</option>
+              {questionGroups.map((group) => (
+                <option key={group.gid} value={group.gid}>
+                  {group.Title}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="number"
+              value={marks}
+              onChange={(e) => setMarks(e.target.value)}
+              className={`input input-bordered w-full max-w-xs sm:w-1/3 m-1`}
+              placeholder="Enter Marks"
+              min="1"
+            />
+
+            <select
+              value={toption}
+              onChange={(e) => setToption(e.target.value)}
+              className="select select-bordered w-full sm:w-1/3 m-1"
+            >
+              <option value="">Select number of options</option>
+              {[3, 4, 5, 6, 7].map((count) => (
+                <option key={count} value={count}>
+                  {count} Options
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {options.map((option, index) => (
+              <div key={index} className="flex flex-col p-4 bg-white rounded-lg shadow-md space-y-2">
+                <div className="flex items-center space-x-4">
+                  <span className="font-semibold text-lg text-gray-700">{String.fromCharCode(97 + index)})</span>
+                  <OptionEditor
+                    value={option}
+                    onChange={(value) => handleOptionEditorChange(index, value)}
+                    style={{ height: "100px", width: "100%" }} // Set the desired size here
+                  />
+                </div>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="correctOption"
+                    checked={correctOption === index}
+                    onChange={() => setCorrectOption(index)}
+                    className="radio radio-primary"
+                  />
+                  <span className="ml-2 text-gray-700">Correct Option</span>
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex justify-center">
+            <button onClick={handleCreate} className="btn btn-success px-6 py-2 rounded-lg shadow-lg">
+              Create Question
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AddQuestion;

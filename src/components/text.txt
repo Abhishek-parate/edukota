@@ -1,0 +1,250 @@
+import React, { useState, useEffect } from "react";
+
+import "react-quill/dist/quill.snow.css";
+import MyQuillEditor from "../components/editor/MyQuillEditor";
+import OptionEditor from "../components/editor/OptionEditor";
+import {
+  createQuestion,
+  getQuestions,
+  updateQuestion,
+  deleteQuestion,
+} from "../api";
+
+const QuestionManager = () => {
+  const [questions, setQuestions] = useState([]);
+  const [title, setTitle] = useState(""); // Question title will use rich text
+  const [optionsCount, setOptionsCount] = useState(""); // Initial state as empty string for "Select" option
+  const [options, setOptions] = useState([]);
+  const [correctOption, setCorrectOption] = useState(null);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
+
+  useEffect(() => {
+    if (optionsCount !== "") {
+      setOptions(Array(parseInt(optionsCount)).fill({ name: "", img: "", is_correct: false }));
+    } else {
+      setOptions([]);
+    }
+  }, [optionsCount]);
+
+  const fetchQuestions = async () => {
+    const data = await getQuestions();
+    setQuestions(data);
+  };
+
+  const validateForm = () => {
+    if (title.trim() === "" || title === "<p><br></p>") {
+      setErrorMessage("Question cannot be empty");
+      return false;
+    }
+    if (options.some(option => option.name.trim() === "")) {
+      setErrorMessage("All options must have a name");
+      return false;
+    }
+    if (correctOption === null) {
+      setErrorMessage("You must select a correct option");
+      return false;
+    }
+    setErrorMessage("");
+    return true;
+  };
+
+  const handleOptionChange = (index, key, value) => {
+    const newOptions = [...options];
+    newOptions[index] = { ...newOptions[index], [key]: value };
+    setOptions(newOptions);
+  };
+
+  const handleImageUpload = (index, event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      handleOptionChange(index, "img", reader.result);
+    };
+    if (file) {
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!validateForm()) return;
+
+    const newQuestion = { question: title, options };
+    await createQuestion(newQuestion);
+    setTitle("");
+    setOptions([]);
+    setOptionsCount("");
+    setCorrectOption(null);
+    fetchQuestions();
+  };
+
+  const handleUpdate = async () => {
+    if (!validateForm()) return;
+
+    const updatedQuestion = {
+      qid: editingQuestion.qid,
+      question: title,
+      options,
+      correct_option: correctOption,
+    };
+    await updateQuestion(updatedQuestion);
+    setEditingQuestion(null);
+    setTitle("");
+    setOptions([]);
+    setOptionsCount("");
+    setCorrectOption(null);
+    fetchQuestions();
+  };
+
+  const handleDelete = async (qid) => {
+    await deleteQuestion(qid);
+    fetchQuestions();
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <div className="card shadow-lg bg-base-100 p-6 rounded-lg">
+        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+          Question Management
+        </h1>
+
+        <div className="flex flex-col gap-4 mb-4">
+
+          <MyQuillEditor
+          theme="snow"
+          value={title}
+          onChange={setTitle}
+          className={`quill-editor ${errorMessage ? "border-red-500" : ""}`}
+          placeholder="Enter Question Title"
+          />
+
+          <OptionEditor
+            theme="snow"
+            value={title}
+            onChange={setTitle}
+            className={`quill-editor ${errorMessage ? "border-red-500" : ""}`}
+            placeholder="Enter Question Title"
+          />
+
+          <select
+            value={optionsCount}
+            onChange={(e) => setOptionsCount(e.target.value)}
+            className="select select-bordered w-full p-3"
+          >
+            <option value="">Select number of options</option>
+            {[3, 4, 5, 6, 7].map((count) => (
+              <option key={count} value={count}>
+                {count} Options
+              </option>
+            ))}
+          </select>
+
+          <div className="mt-4">
+            {options.map((option, index) => (
+              <div key={index} className="flex items-center mb-4 p-4 bg-white rounded-lg shadow-md space-x-4">
+                <span className="font-semibold text-lg text-gray-700">{String.fromCharCode(97 + index)})</span>
+                <input
+                  type="text"
+                  value={option.name}
+                  onChange={(e) => handleOptionChange(index, "name", e.target.value)}
+                  className="file-input file-input-bordered file-input-primary flex-grow"
+                  placeholder={`Option ${index + 1}`}
+                />
+                <input
+                  type="file"
+                  onChange={(e) => handleImageUpload(index, e)}
+                  className="file-input file-input-bordered file-input-primary "
+                />
+                {option.img && (
+                  <img src={option.img} alt={`Option ${index + 1}`} className="w-16 h-16 object-cover rounded-lg shadow-md" />
+                )}
+                <label className="cursor-pointer ml-2">
+                  <input
+                    type="radio"
+                    name="correctOption"
+                    checked={correctOption === index}
+                    onChange={() => setCorrectOption(index)}
+                    className="radio radio-primary"
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
+
+          {errorMessage && (
+            <div className="text-red-500 text-sm mt-2">{errorMessage}</div>
+          )}
+
+          <div className="mt-4 flex justify-center">
+            {editingQuestion ? (
+              <button onClick={handleUpdate} className="btn btn-primary px-6 py-2 rounded-lg shadow-lg">
+                Update Question
+              </button>
+            ) : (
+              <button onClick={handleCreate} className="btn btn-success px-6 py-2 rounded-lg shadow-lg">
+                Create Question
+              </button>
+            )}
+          </div>
+        </div>
+
+        <ul className="list-none space-y-4 mt-8">
+          {questions.map((question) => (
+            <li
+              key={question.qid}
+              className="flex flex-col p-4 bg-white rounded-lg shadow-md"
+            >
+              <span className="text-lg font-medium text-gray-800" dangerouslySetInnerHTML={{ __html: question.question }}></span>
+              <ul className="list-disc pl-5 mt-2">
+                {question.options.map((option, index) => (
+                  <li
+                    key={option.oid}
+                    className={`flex items-center ${
+                      option.is_correct ? "font-bold text-green-600" : "text-gray-700"
+                    }`}
+                  >
+                    {String.fromCharCode(97 + index)}) {option.name}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-2 mt-4 justify-end">
+                <button
+                  onClick={() => {
+                    setEditingQuestion(question);
+                    setTitle(question.question);
+                    setOptions(
+                      question.options.map((opt) => ({
+                        name: opt.name,
+                        img: opt.img,
+                        is_correct: opt.is_correct,
+                      }))
+                    );
+                    setCorrectOption(
+                      question.options.find((opt) => opt.is_correct)?.oid
+                    );
+                    setOptionsCount(question.options.length);
+                  }}
+                  className="btn btn-info btn-sm px-4 py-2 rounded-lg shadow-md"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(question.qid)}
+                  className="btn btn-error btn-sm px-4 py-2 rounded-lg shadow-md"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default QuestionManager;
