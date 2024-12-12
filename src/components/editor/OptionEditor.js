@@ -10,18 +10,15 @@ const modules = {
 
 const formats = ["image", "formula"];
 
-const OptionEditor = ({ onChange, style }) => {
-  const [editorContent, setEditorContent] = useState("");
-
+const OptionEditor = ({ value, onChange, style }) => {
   const handleChange = (value) => {
-    setEditorContent(value);
     onChange(value); // Pass the content back to the parent component
   };
 
   return (
     <div style={style}>
       <ReactQuill
-        value={editorContent}
+        value={value}
         onChange={handleChange}
         modules={modules}
         formats={formats}

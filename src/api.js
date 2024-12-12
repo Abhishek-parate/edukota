@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://edukotangp.in/edukotaapi/";
+const API_BASE_URL = "http://localhost/examapi/";
 
 export const loginUser = async (credentials) => {
   const response = await fetch(`${API_BASE_URL}login.php`, {
@@ -124,7 +124,7 @@ export const addQuestion = async (questionData) => {
 // Fetch all questions
 export const fetchQuestions = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/question/allquelist.php`);
+    const response = await fetch(`${API_BASE_URL}question/allquelist.php`);
     if (!response.ok) throw new Error("Network response was not ok");
     return await response.json();
   } catch (error) {
@@ -137,7 +137,7 @@ export const fetchQuestions = async () => {
 export const fetchQuestionById = async (qid) => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/question/getQuestionById.php?qid=${qid}`
+      `${API_BASE_URL}question/getQuestionById.php?qid=${qid}`
     );
     if (!response.ok) throw new Error("Network response was not ok");
     return await response.json();
@@ -151,7 +151,7 @@ export const fetchQuestionById = async (qid) => {
 export const updateQuestion = async (qid, payload) => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/question/update_question.php?qid=${qid}`,
+      `${API_BASE_URL}question/update_question.php?qid=${qid}`,
       {
         method: "PUT",
         headers: {
@@ -172,7 +172,7 @@ export const updateQuestion = async (qid, payload) => {
 export const deleteQuestion = async (qid) => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/question/delete_question.php?qid=${qid}`,
+      `${API_BASE_URL}question/delete_question.php?qid=${qid}`,
       {
         method: "DELETE",
       }
@@ -254,7 +254,7 @@ export const getInst = async () => {
 export const getExamById = async (eid) => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/exam/get_exam_by_id.php?eid=${eid}`
+      `${API_BASE_URL}exam/get_exam_by_id.php?eid=${eid}`
     );
     if (!response.ok) throw new Error("Network response was not ok");
     return await response.json();
@@ -271,7 +271,7 @@ export const updateExam = async (eid, examDetails) => {
 export const getQuestionsByGroupId = async (gid) => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/exam/getquegrpbyid.php?gid=${gid}`
+      `${API_BASE_URL}exam/getquegrpbyid.php?gid=${gid}`
     );
     if (!response.ok) throw new Error("Network response was not ok");
     return await response.json();
@@ -285,7 +285,7 @@ export const getQuestionsByGroupId = async (gid) => {
 export const getOtherQuestions = async (eid) => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/exam/getotherquestions.php?eid=${eid}`
+      `${API_BASE_URL}exam/getotherquestions.php?eid=${eid}`
     );
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
@@ -430,7 +430,7 @@ export const fetchUserResults = async () => {
 
 // api.js
 export const fetchDetailedResults = async (uid) => {
-  const response = await fetch(`https://edukotangp.in/edukotaapi/results/singlereult.php?uid=${uid}`);
+  const response = await fetch(`http://localhost/examapi/results/singlereult.php?uid=${uid}`);
   if (!response.ok) {
     throw new Error('Failed to fetch detailed results');
   }

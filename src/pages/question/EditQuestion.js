@@ -31,20 +31,23 @@ const UpdateQuestion = () => {
   }, [qid]);
 
   useEffect(() => {
-    if (toption !== "") {
+    if (toption !== "" && options.length !== parseInt(toption)) {
       setOptions(Array(parseInt(toption)).fill("")); // Adjust options count based on toption
     }
-  }, [toption]);
+  }, [toption, options.length]);
+  
+  
 
   const fetchQuestion = async () => {
     try {
       const data = await fetchQuestionById(qid);
       console.log(data); // Log to check if data is fetched correctly
+
       setTitle(data.question);
       setOptions(data.options.map((opt) => opt.name));
-      setCorrectOption(data.options.findIndex((opt) => opt.isCorrect));
+      setCorrectOption(data.options.findIndex((opt) => opt.is_correct === "1"));
       setMarks(data.mark);
-      setToption(data.options.length);
+      setToption(data.options.length.toString());
       setSelectedGroup(data.gid);
     } catch (error) {
       Swal.fire('Error', 'Failed to fetch question details.', 'error');
@@ -61,14 +64,26 @@ const UpdateQuestion = () => {
   };
 
   const handleOptionChange = (index, value) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
+    setOptions((prevOptions) => {
+      const newOptions = [...prevOptions];
+      if (newOptions[index] !== value) {
+        newOptions[index] = value;
+      }
+      return newOptions;
+    });
   };
 
+  const handleTitleChange = (newTitle) => {
+    if (newTitle !== title) {
+      setTitle(newTitle);
+    }
+  };
+  
+  
   const handleOptionEditorChange = (index, value) => {
     handleOptionChange(index, value);
   };
+  
 
   const validateForm = () => {
     let valid = true;
@@ -133,7 +148,7 @@ const UpdateQuestion = () => {
         icon: 'success',
         confirmButtonText: 'OK',
       }).then(() => {
-        navigate('/questions');
+        navigate('/admin/que');
       });
     } catch (error) {
       Swal.fire('Error', 'Failed to update question.', 'error');
@@ -239,7 +254,7 @@ const UpdateQuestion = () => {
               Update Question
             </button>
             <button
-              onClick={() => navigate('/questions')}
+              onClick={() => navigate('/admin/que')}
               className="btn btn-secondary px-6 py-2 rounded-lg shadow-lg"
             >
               Cancel
