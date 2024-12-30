@@ -38,7 +38,7 @@ const GetExams = () => {
       {/* Banner Image */}
       <div className="w-full mb-2">
         <img
-          src="/assets/logo-educat.jpg" // Replace with actual banner image URL
+          src="/assets/bg-cat.jpg" // Replace with actual banner image URL
           alt="Banner"
           className="w-full h-auto object-cover rounded-lg"
         />

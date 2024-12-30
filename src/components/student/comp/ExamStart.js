@@ -205,7 +205,7 @@ console.log(JSON.parse(sessionStorage.getItem("user")).uid)
           ></h2>
           <div className="space-y-3">
             {question.options.map((option) => (
-              <div
+              <label
                 key={option.oid}
                 className="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"
               >
@@ -217,8 +217,8 @@ console.log(JSON.parse(sessionStorage.getItem("user")).uid)
                   onChange={() => handleAnswerChange(option.oid)}
                   className="mr-2 radio checked:bg-blue-500"
                 />
-                <div dangerouslySetInnerHTML={{ __html: option.name }}></div>
-              </div>
+                <span dangerouslySetInnerHTML={{ __html: option.name }}></span>
+              </label>
             ))}
           </div>
           <div className="flex justify-between mt-6 space-x-2">

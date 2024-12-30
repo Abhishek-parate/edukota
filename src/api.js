@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost/examapi/";
+const API_BASE_URL = "https://edukota.techinbox.in/examapi/";
 
 export const loginUser = async (credentials) => {
   const response = await fetch(`${API_BASE_URL}login.php`, {
@@ -430,7 +430,7 @@ export const fetchUserResults = async () => {
 
 // api.js
 export const fetchDetailedResults = async (uid) => {
-  const response = await fetch(`http://localhost/examapi/results/singlereult.php?uid=${uid}`);
+  const response = await fetch(`${API_BASE_URL}/results/singlereult.php?uid=${uid}`);
   if (!response.ok) {
     throw new Error('Failed to fetch detailed results');
   }

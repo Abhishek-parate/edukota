@@ -11,6 +11,7 @@ const DetailedResults = () => {
   const [totalMarks, setTotalMarks] = useState(0); // State for total marks
   const [username, setUsername] = useState(""); // State for user's name
   const [contactNumber, setContactNumber] = useState(""); // State for user's contact number
+  const [totalIncorrect, setTotalIncorrect] = useState(0); // State for total incorrect answers
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -22,20 +23,29 @@ const DetailedResults = () => {
           Swal.fire("Error", data.error, "error");
         } else {
           setResults(data.results); // Store the results
-          
-          // Calculate the total marks obtained
-          const obtainedMarks = data.results.reduce((sum, item) => {
-            return sum + (item.is_correct ? parseInt(item.mark) : 0); // Add mark if answer is correct
-          }, 0);
 
-          // Set total marks, username, and contact number
+          // Calculate total marks and incorrect answers
+          let obtainedMarks = 0;
+          let incorrectCount = 0;
+
+          data.results.forEach((item) => {
+            if (item.is_correct === "1") {
+              obtainedMarks += 4; // Assuming each correct answer is worth 4 marks
+            } else {
+              incorrectCount++;
+            }
+          });
+
           setTotalMarks(obtainedMarks);
-          setUsername(data.student_name || ""); // User's name
-          setContactNumber(data.contact_number || ""); // User's contact number
+          setTotalIncorrect(incorrectCount);
+
+          // Set user details
+          setUsername(data.student_name || "");
+          setContactNumber(data.contact_number || "");
 
           // Prepare summary data
           const newSummary = {};
-          data.results.forEach(item => {
+          data.results.forEach((item) => {
             const group = item.question_group;
             if (!newSummary[group]) {
               newSummary[group] = {
@@ -47,7 +57,7 @@ const DetailedResults = () => {
             }
             newSummary[group].total++;
             newSummary[group].totalMarks += 4; // Each question is worth 4 marks
-            if (item.is_correct) {
+            if (item.is_correct === "1") {
               newSummary[group].correct++;
             } else {
               newSummary[group].incorrect++;
@@ -56,7 +66,11 @@ const DetailedResults = () => {
           setSummary(newSummary); // Store summary data
         }
       } catch (error) {
-        Swal.fire("Error", error.message || "Failed to fetch detailed results.", "error");
+        Swal.fire(
+          "Error",
+          error.message || "Failed to fetch detailed results.",
+          "error"
+        );
       } finally {
         setLoading(false); // Hide loading indicator
       }
@@ -70,11 +84,14 @@ const DetailedResults = () => {
       <h1 className="text-4xl font-bold text-center mb-6 text-gray-800">
         Detailed Results for {username}
       </h1>
-      <p className="text-center mb-4 text-lg">Contact Number: {contactNumber}</p>
+      <p className="text-center mb-4 text-lg">
+        Contact Number: {contactNumber}
+      </p>
 
       {loading ? (
         <div className="flex justify-center items-center">
-          <div className="loader"></div> {/* Replace this with your loading spinner */}
+          <div className="loader"></div>{" "}
+          {/* Replace this with your loading spinner */}
         </div>
       ) : results.length > 0 ? (
         <div className="space-y-8">
@@ -82,10 +99,13 @@ const DetailedResults = () => {
             <h2 className="text-2xl font-bold mb-4">Results Summary</h2>
             <p className="mb-2">Total Questions: {results.length}</p>
             <p className="mb-2">Total Marks Obtained: {totalMarks}</p>
+            <p className="mb-2">Total Incorrect Answers: {totalIncorrect}</p>
           </div>
 
           <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-4">Summary by Question Group</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Summary by Question Group
+            </h2>
             <table className="min-w-full bg-white border border-gray-200 mb-6">
               <thead>
                 <tr>
@@ -93,17 +113,26 @@ const DetailedResults = () => {
                   <th className="border px-4 py-2">Correct Answers</th>
                   <th className="border px-4 py-2">Incorrect Answers</th>
                   <th className="border px-4 py-2">Total Questions</th>
-                  <th className="border px-4 py-2">Total Marks</th> {/* New column for Total Marks */}
+                  <th className="border px-4 py-2">Total Marks</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.keys(summary).map((group, index) => (
-                  <tr key={index} className="hover:bg-gray-100 transition duration-150">
+                  <tr
+                    key={index}
+                    className="hover:bg-gray-100 transition duration-150"
+                  >
                     <td className="border px-4 py-2">{group}</td>
-                    <td className="border px-4 py-2">{summary[group].correct}</td>
-                    <td className="border px-4 py-2">{summary[group].incorrect}</td>
+                    <td className="border px-4 py-2">
+                      {summary[group].correct}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {summary[group].incorrect}
+                    </td>
                     <td className="border px-4 py-2">{summary[group].total}</td>
-                    <td className="border px-4 py-2">{summary[group].totalMarks}</td> {/* Total Marks for the group */}
+                    <td className="border px-4 py-2">
+                      {summary[group].totalMarks}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -115,7 +144,7 @@ const DetailedResults = () => {
             <table className="min-w-full bg-white border border-gray-200">
               <thead>
                 <tr>
-                  <th className="border px-4 py-2">SR No</th> {/* Serial Number Column */}
+                  <th className="border px-4 py-2">SR No</th>
                   <th className="border px-4 py-2">Question</th>
                   <th className="border px-4 py-2">Your Answer</th>
                   <th className="border px-4 py-2">Is Correct</th>
@@ -124,16 +153,29 @@ const DetailedResults = () => {
               </thead>
               <tbody>
                 {results.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-100 transition duration-150">
-                    <td className="border px-4 py-2">{index + 1}</td> {/* Serial Number */}
+                  <tr
+                    key={index}
+                    className="hover:bg-gray-100 transition duration-150"
+                  >
+                    <td className="border px-4 py-2">{index + 1}</td>
                     <td className="border px-4 py-2">
-                      <div dangerouslySetInnerHTML={{ __html: item.question }} />
+                      <div
+                        dangerouslySetInnerHTML={{ __html: item.question }}
+                      />
                     </td>
                     <td className="border px-4 py-2">
-                      <div dangerouslySetInnerHTML={{ __html: item.selected_option }} />
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: item.selected_option,
+                        }}
+                      />
                     </td>
-                    <td className="border px-4 py-2">
-                      {item.is_correct ? "Yes" : "No"}
+                    <td
+                      className={`border px-4 py-2 ${
+                        item.is_correct === "1" ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {item.is_correct === "1" ? "Yes" : "No"}
                     </td>
                     <td className="border px-4 py-2">{item.question_group}</td>
                   </tr>

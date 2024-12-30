@@ -47,7 +47,7 @@ const Header = () => {
           {/* Banner Image */}
           <div className="w-24 mb-2">
             <img
-              src="/assets/logo.jpg" // Replace with actual banner image URL
+              src="/assets/logo.jpeg" // Replace with actual banner image URL
               alt="Banner"
               className="w-full h-auto object-cover rounded-lg"
             />
